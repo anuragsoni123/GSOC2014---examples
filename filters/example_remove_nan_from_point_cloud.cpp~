@@ -11,7 +11,7 @@
  * are met:
  *
  * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
+ *	   notice, this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: example_ocl_medianFilter_me.cpp $
+ * $Id: example_removeNaNFromPointCloud.cpp 4117 2012-01-31 17:56:02Z aichim $
  *
  */
 
@@ -46,69 +46,62 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/filter.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/ocl/filters/median_filter.h>
-#include <pcl/ocl/filters/impl/median_filter.hpp>
-#include <pcl/filters/median_filter.h>
-#include <pcl/filters/impl/median_filter.hpp>
-typedef pcl::PointXYZ PointT;
 
-#include<string>
-#include <time.h>
-int main (int argc, char** argv)
+#include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>
+typedef pcl::PointXYZ PointT;
+int
+main (int argc, char** argv)
 {
+
   std::string incloudfile = argv[1];
   std::string outcloudfile = argv[2];
-  std::string outcloudfile1 = argv[3];
-  //std::string outcloudfile2 = argv[4];
-
-
-  clock_t tStart = clock();
   pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
   pcl::io::loadPCDFile (incloudfile.c_str (), *cloud);
-  //printf("\n\n\n %d %d\n\n\n",cloud->width, cloud->height );
-  pcl::PointCloud<PointT> cloud_filtered;
+  std::cerr << "PointCloud before filtering: " << cloud->points.size() 
+       << " data points (" << pcl::getFieldsList (*cloud) << ").";
   
-  pcl::ocl::MedianFilter<PointT> mf;
-  mf.setInputCloud(cloud);
-  
-  mf.filter(cloud_filtered);
-  printf("GPU Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-  
-  pcl::io::savePCDFile (outcloudfile.c_str (), cloud_filtered);
+  pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
+  std::vector<int> indices;
+  pcl::removeNaNFromPointCloud(*cloud, *cloud_filtered, indices);
+  std::cout << "\n size: " << cloud_filtered->points.size () << "\n width height"<<  cloud->width << " "<<cloud->height << " "<<indices.size()  <<std::endl;
+  pcl::io::savePCDFile (outcloudfile.c_str (), *cloud_filtered);
 
-///////////////CPU////////////////////////////
-  tStart = clock();
-  pcl::PointCloud<PointT>::Ptr cloud1(new pcl::PointCloud<PointT>);
-  pcl::io::loadPCDFile (incloudfile.c_str (), *cloud1);
-  //printf("\n\n\n %d %d\n\n\n",cloud->width, cloud->height );
-  pcl::PointCloud<PointT> cloud_filtered1;
-  
-  pcl::MedianFilter<PointT> mf1;
-  mf1.setInputCloud(cloud1);
-  
-  mf1.filter(cloud_filtered1);
-  printf("CPU Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
-  // Save filtered output
-  pcl::io::savePCDFile (outcloudfile1.c_str (), cloud_filtered1);
+  /*typedef pcl::PointCloud<pcl::PointXYZ> CloudType;
+  CloudType::Ptr cloud (new CloudType);
+  cloud->is_dense = false;
+  cloud->width = 2;
+  cloud->height = 2;
+  cloud->points.resize(4);
+  CloudType::Ptr output_cloud (new CloudType);
 
-  /*pcl::PointCloud<pcl::PointXYZ> test;
-  //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+  CloudType::PointType p_valid;
+  p_valid.x = 1.0f;
+  cloud->push_back(p_valid);
 
-  // Fill in the cloud data
-  test.width  = 1024;
-  test.height = 1024;
-  test.points.resize (test.width * test.height);
+  CloudType::PointType p_nan;
+  p_nan.x = std::numeric_limits<float>::quiet_NaN();
+  p_nan.y = std::numeric_limits<float>::quiet_NaN();
+  p_nan.z = std::numeric_limits<float>::quiet_NaN();
+  cloud->push_back(p_nan);
 
-  for (int i = 0; i < cloud->points.size (); ++i)
-  {
-    test.points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
-    test.points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
-    test.points[i].z = 1024 * rand () / (RAND_MAX + 1.0f);
-  }
-  pcl::io::savePCDFile (outcloudfile2.c_str(), test);
-*/
-  
-   return (0);
- 
- 
+  CloudType::PointType p_nan1;
+  p_nan1.x = std::numeric_limits<float>::quiet_NaN();
+  p_nan1.y = std::numeric_limits<float>::quiet_NaN();
+  p_nan1.z = std::numeric_limits<float>::quiet_NaN();
+  cloud->push_back(p_nan1);
+
+  CloudType::PointType p_valid1;
+  p_valid1.x = 1.0f;
+  cloud->push_back(p_valid1);
+  cloud->push_back(p_valid1);
+
+  std::cout << "size: " << cloud->points.size () << std::endl;
+
+  std::vector<int> indices;
+  pcl::removeNaNFromPointCloud(*cloud, *output_cloud, indices);
+  std::cout << "size: " << output_cloud->points.size () << std::endl;
+  std::cout << indices.size() << indices[0] << indices[1];
+
+  return 0;*/
 }

@@ -11,7 +11,7 @@
  * are met:
  *
  * * Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
+ *	   notice, this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above
  *   copyright notice, this list of conditions and the following
  *   disclaimer in the documentation and/or other materials provided
@@ -45,14 +45,39 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>
 
+#include <pcl/filters/filter.h>
+#include <pcl/io/pcd_io.h>
+typedef pcl::PointXYZ PointT;
 int
-main (int, char**)
+main (int argc, char** argv)
 {
-  typedef pcl::PointCloud<pcl::PointXYZ> CloudType;
+
+  std::string incloudfile = argv[1];
+  std::string outcloudfile = argv[2];
+  pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
+  pcl::io::loadPCDFile (incloudfile.c_str (), *cloud);
+  std::cerr << "PointCloud before filtering: " << cloud->points.size() 
+       << " data points (" << pcl::getFieldsList (*cloud) << ").";
+  
+  pcl::PointCloud<PointT>::Ptr cloud_filtered(new pcl::PointCloud<PointT>);
+  std::vector<int> indices;
+  pcl::removeNaNFromPointCloud(*cloud, *cloud_filtered, indices);
+  std::cout << "\n size: " << cloud_filtered->points.size () << "\n width height"<<  cloud_filtered->width << " "<<cloud_filtered->height << " "<<indices.size()  <<std::endl;
+  pcl::io::savePCDFile (outcloudfile.c_str (), *cloud_filtered);
+
+  /*typedef pcl::PointCloud<pcl::PointXYZ> CloudType;
   CloudType::Ptr cloud (new CloudType);
   cloud->is_dense = false;
+  cloud->width = 2;
+  cloud->height = 2;
+  cloud->points.resize(4);
   CloudType::Ptr output_cloud (new CloudType);
+
+  CloudType::PointType p_valid;
+  p_valid.x = 1.0f;
+  cloud->push_back(p_valid);
 
   CloudType::PointType p_nan;
   p_nan.x = std::numeric_limits<float>::quiet_NaN();
@@ -60,15 +85,23 @@ main (int, char**)
   p_nan.z = std::numeric_limits<float>::quiet_NaN();
   cloud->push_back(p_nan);
 
-  CloudType::PointType p_valid;
-  p_valid.x = 1.0f;
-  cloud->push_back(p_valid);
+  CloudType::PointType p_nan1;
+  p_nan1.x = std::numeric_limits<float>::quiet_NaN();
+  p_nan1.y = std::numeric_limits<float>::quiet_NaN();
+  p_nan1.z = std::numeric_limits<float>::quiet_NaN();
+  cloud->push_back(p_nan1);
+
+  CloudType::PointType p_valid1;
+  p_valid1.x = 1.0f;
+  cloud->push_back(p_valid1);
+  cloud->push_back(p_valid1);
 
   std::cout << "size: " << cloud->points.size () << std::endl;
 
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*cloud, *output_cloud, indices);
   std::cout << "size: " << output_cloud->points.size () << std::endl;
+  std::cout << indices.size() << indices[0] << indices[1];
 
-  return 0;
+  return 0;*/
 }

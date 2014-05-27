@@ -33,7 +33,7 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: example_removeNaNFromPointCloud.cpp 4117 2012-01-31 17:56:02Z aichim $
+ * $Id: example_ocl_medianFilter_me.cpp $
  *
  */
 
@@ -48,24 +48,65 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/ocl/filters/median_filter.h>
 #include <pcl/ocl/filters/impl/median_filter.hpp>
+#include <pcl/filters/median_filter.h>
+#include <pcl/filters/impl/median_filter.hpp>
 typedef pcl::PointXYZ PointT;
 
 #include<string>
+#include <time.h>
 int main (int argc, char** argv)
 {
   std::string incloudfile = argv[1];
   std::string outcloudfile = argv[2];
+  std::string outcloudfile1 = argv[3];
+  //std::string outcloudfile2 = argv[4];
+
+
+  clock_t tStart = clock();
   pcl::PointCloud<PointT>::Ptr cloud(new pcl::PointCloud<PointT>);
   pcl::io::loadPCDFile (incloudfile.c_str (), *cloud);
-  printf("\n\n\n %d %d\n\n\n",cloud->width, cloud->height );
+  //printf("\n\n\n %d %d\n\n\n",cloud->width, cloud->height );
   pcl::PointCloud<PointT> cloud_filtered;
   
   pcl::ocl::MedianFilter<PointT> mf;
   mf.setInputCloud(cloud);
+  
   mf.filter(cloud_filtered);
-
-  // Save filtered output
+  printf("GPU Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+  
   pcl::io::savePCDFile (outcloudfile.c_str (), cloud_filtered);
+
+///////////////CPU////////////////////////////
+  tStart = clock();
+  pcl::PointCloud<PointT>::Ptr cloud1(new pcl::PointCloud<PointT>);
+  pcl::io::loadPCDFile (incloudfile.c_str (), *cloud1);
+  //printf("\n\n\n %d %d\n\n\n",cloud->width, cloud->height );
+  pcl::PointCloud<PointT> cloud_filtered1;
+  
+  pcl::MedianFilter<PointT> mf1;
+  mf1.setInputCloud(cloud1);
+  
+  mf1.filter(cloud_filtered1);
+  printf("CPU Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+  // Save filtered output
+  pcl::io::savePCDFile (outcloudfile1.c_str (), cloud_filtered1);
+
+  /*pcl::PointCloud<pcl::PointXYZ> test;
+  //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+
+  // Fill in the cloud data
+  test.width  = 1024;
+  test.height = 1024;
+  test.points.resize (test.width * test.height);
+
+  for (int i = 0; i < cloud->points.size (); ++i)
+  {
+    test.points[i].x = 1024 * rand () / (RAND_MAX + 1.0f);
+    test.points[i].y = 1024 * rand () / (RAND_MAX + 1.0f);
+    test.points[i].z = 1024 * rand () / (RAND_MAX + 1.0f);
+  }
+  pcl::io::savePCDFile (outcloudfile2.c_str(), test);
+*/
   
    return (0);
  
